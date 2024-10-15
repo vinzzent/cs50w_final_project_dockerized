@@ -1,0 +1,77 @@
+/* custom-font-sizes.css */
+
+/* General body text */
+body {
+    font-size: 0.875rem; /* 14px if the base size is 16px */
+}
+
+.accordion-button {
+    font-size: 0.875rem; /* Adjust the size as needed */
+}
+
+/* Headings */
+h1 {
+    font-size: 1.5rem; /* 24px */
+}
+h2 {
+    font-size: 1.25rem; /* 20px */
+}
+h3 {
+    font-size: 1.125rem; /* 18px */
+}
+h4 {
+    font-size: 1rem; /* 16px */
+}
+h5 {
+    font-size: 0.875rem; /* 14px */
+}
+h6 {
+    font-size: 0.75rem; /* 12px */
+}
+
+/* Paragraphs */
+p {
+    font-size: 0.875rem; /* 14px */
+}
+
+/* Links */
+a {
+    font-size: 0.875rem; /* 14px */
+}
+
+/* Small text elements */
+small {
+    font-size: 0.75rem; /* 12px */
+}
+
+.bg-main-color {
+    background-color: #22577a; /* Your custom color */
+}
+
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+.pagination a, .pagination span {
+    margin: 0 5px;
+    padding: 8px 16px;
+    border: 1px solid #212529;
+    text-decoration: none;
+    color: #22577a
+}
+.pagination .current {
+    background-color: #22577a;
+    color: white;
+}
+.pagination .disabled {
+    border: 1px solid #dee2e6;
+    color: #dee2e6;
+    cursor: not-allowed;
+}
+
+.pagination a:hover {
+    background-color: #6c757d; /* Color on hover */
+}

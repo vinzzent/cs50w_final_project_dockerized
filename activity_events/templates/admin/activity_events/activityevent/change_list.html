@@ -1,0 +1,14 @@
+{% extends "admin/change_list.html" %}
+
+{% load activity_events_filters %}
+
+{% block object-tools %}
+  <div class="object-tools">
+    {{ block.super }}
+    <div>  
+      <a href="{% url 'admin:admin-check-fetch-activity-events' %}" class="golink">Check activity events API</a>
+      <a href="{% url 'admin:admin-fetch-activity-events' %}" class="golink">Fetch & save activity events</a>
+      <a href="{% url 'admin:admin-export-activity-events-csv' %}{{ request.GET|build_query_string_for_admin_activity_events }}" class="golink" download>Export activity events to CSV</a>
+    </div>
+  </div>    
+{% endblock %}

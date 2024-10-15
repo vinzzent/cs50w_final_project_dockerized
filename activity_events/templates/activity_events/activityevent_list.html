@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load activity_events_filters %}
+
+{% block title %}Activity Events List{% endblock %}
+{% block content %}
+<h1>Activity Events List</h1>
+<p>Last Successful Data Update: {{ last_data_update_time }}</p>
+<!-- Filter Form -->
+<form method="get" action="" id="activity-events-form">
+   <div class="row my-2">
+   <div class="col-sm-9">
+   <div class="input-group">
+      <span class="input-group-text" id="input-group-search">Search</span>
+      <input class="form-control" aria-label="Search input" aria-describedby="input-group-search" type="text" id="search-input" name="q" value="{{ request.GET.q }}">   
+   </div>
+   </div>
+   </div>
+   <div class="row my-2">
+      <div class="accordion col-sm-6" id="accordion-filters">
+         <div class="accordion-item">
+            <h2 class="accordion-header">
+               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-accordion-filters" aria-expanded="false" aria-controls="collapse-accordion-filters">
+               Filters
+               </button>
+            </h2>
+            <div id="collapse-accordion-filters" class="accordion-collapse collapse" data-bs-parent="#accordion-filters">
+               <div class="accordion-body row row-cols-auto">
+                  {% for field, content in filter_values.items %}            
+                  {% if content.values.max_date and content.values.min_date %}               
+                  <!-- Date Range Filter -->
+                  <label class="form-label" id="{{ field }}">
+                  {{ content.displayname|default:field }}
+                  <div class="row row-cols-auto">
+                        <div class="col">
+                           <label class="form-label" for="{{ field }}_start">Start</label>
+                           <input class="form-control form-control-sm" type="date" name="{{ content.start }}" min="{{ content.values.min_date }}" max="{{ content.values.max_date }}" value="{{ request.GET|get_value:content.start|default:'' }}" id="{{ field }}_start">
+                        </div>
+                        <div class="col">
+                           <label class="form-label" for="{{ field }}_end">End</label>
+                           <input class="form-control form-control-sm" type="date" name="{{ content.end }}" min="{{ content.values.min_date }}" max="{{ content.values.max_date }}" value="{{ request.GET|get_value:content.end|default:'' }}" id="{{ field }}_end">
+                        </div>
+                     </div>
+                  </label>
+                  {% else %}
+                  <!-- Other Filters -->
+                  <div class="col">
+                     <label class="form-label" for="{{ field }}">{{ content.displayname|default:field }}</label>
+                     <select class="form-select form-select-sm" name="{{ field }}" id="{{ field }}">
+                        <option value="">All</option>
+                        {% for value in content.values %}
+                        <option value="{{ value }}" {% if value == request.GET|get_value:field %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                     </select>
+                  </div>
+                  {% endif %}        
+                  {% endfor %}
+               </div>
+            </div>
+         </div>
+         <p>{{ request.GET|generate_filters_description:filter_values }}</p>
+      </div>      
+      <div class="accordion col-sm-3" id="accordion-order-by">
+         <div class="accordion-item">
+            <h2 class="accordion-header">
+               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-accordion-order-by" aria-expanded="false" aria-controls="collapse-accordion-order-by">
+               Order by
+               </button>
+            </h2>
+            <div id="collapse-accordion-order-by" class="accordion-collapse collapse" data-bs-parent="#accordion-order-by">
+               <div class="accordion-body row row-cols-auto">
+                  <div class="col">
+                     <label class="form-label" for="{{ orderby.fields.name }}">{{ orderby.fields.displayname }}</label>
+                     <select class="form-select form-select-sm" name="{{ orderby.fields.name }}" id="{{ orderby.fields.name }}">
+                        <option value="">Default</option>
+                        {% for field in orderby.fields.values %}
+                        <option value="{{ field.fieldname }}" {% if request.GET|get_value:orderby.directions.name and field.fieldname == request.GET|get_value:orderby.fields.name %}selected{% endif %}>{{ field.displayname|default:field.fieldname }}</option>
+                        {% endfor %}
+                     </select>
+                  </div>
+                  <div class="col">
+                     <label class="form-label" for="{{ orderby.directions.name }}">{{ orderby.directions.displayname }}</label>
+                     <select class="form-select form-select-sm" name="{{ orderby.directions.name }}" id="{{ orderby.directions.name }}">
+                        <option value="">Default</option>
+                        {% for key, value in orderby.directions.values.items %}
+                        <option value="{{ key }}" {% if request.GET|get_value:orderby.fields.name and key == request.GET|get_value:orderby.directions.name %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                     </select>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <p>{{ request.GET|generate_orderby_description:orderby }}</p>         
+      </div>
+   </div>
+   <div class="my-2">  
+   <button class="btn bg-main-color btn-secondary" type="submit">Apply Filters</button>
+   <button class="btn bg-main-color btn-secondary" id="export-csv-btn">Export CSV</button>
+   {% if request.GET|has_non_empty_query_params %}
+   <a class="link ms-2" href="{% url 'activity_events:events_list' %}">Reset Filters</a>
+   {% endif %}
+   <p id="export-status"></p>
+   <a class="link" id="download-link" style="display: none;">Download CSV</a>
+   </div>
+</form>
+<hr/>
+<p id="items-number">Showing items {{ page_obj.start_index }} to {{ page_obj.end_index }} out of {{ page_obj.paginator.count }}</p>
+<hr/>
+<!-- Data Table -->
+<table class="table table-sm table-striped table-responsive">
+   <thead>
+      <tr>
+         <th>#</th>
+         {% for field in event_fields %}
+         <th scope="col">{{ field.displayname|default:field.fieldname }}</th>
+         {% endfor %}
+      </tr>
+   </thead>
+   <tbody>
+      {% for event in events %}
+      <tr>
+         <td>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</td>
+         {% for field in event_fields %}         
+         <td>{{ event|get_attr:field.fieldname }}</td>
+         {% endfor %}
+      </tr>
+      {% empty %}
+      <tr>
+         <td colspan="{{ event_fields|length|add:1 }}">No events to display.</td>
+      </tr>
+      {% endfor %}
+   </tbody>
+</table>
+<!-- Pagination Controls -->
+<div class="pagination">
+   {% if page_obj.has_previous %}
+   <a href="?page=1&{{ request.GET|build_query_string }}">First</a>
+   <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET|build_query_string }}">Previous</a>
+   {% else %}
+   <span class="disabled">First</span>
+   <span class="disabled">Previous</span>
+   {% endif %}
+   {% for num in page_obj.paginator.page_range %}
+   {% if num == page_obj.number %}
+   <span class="current">{{ num }}</span>
+   {% elif num > page_obj.number|add:'-5' and num < page_obj.number|add:'5' %} <a
+      href="?page={{ num }}&{{ request.GET|build_query_string }}">{{ num }}</a>
+   {% endif %}
+   {% endfor %}
+   {% if page_obj.has_next %}
+   <a href="?page={{ page_obj.next_page_number }}&{{ request.GET|build_query_string }}">Next</a>
+   <a href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET|build_query_string }}">Last</a>
+   {% else %}
+   <span class="disabled">Next</span>
+   <span class="disabled">Last</span>
+   {% endif %}
+</div>
+{% endblock %}
+{% block script %}
+<script src="{% static 'activity_events/csvExport.js' %}"></script>
+{% endblock %}

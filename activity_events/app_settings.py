@@ -1,0 +1,13 @@
+from django.conf import settings
+
+ACTIVITY_EVENTS_FETCH_TASK_NAME = 'activity_events.tasks.fetch_and_update_activity_events'
+
+ACTIVITY_EVENTS_FETCH_MAX_PAST_DAYS =  getattr(settings, 'ACTIVITY_EVENTS_FETCH_MAX_PAST_DAYS', 15)
+ACTIVITY_EVENTS_FETCH_BUFFER_HOURS = getattr(settings, 'ACTIVITY_EVENTS_FETCH_BUFFER_HOURS', 8)
+ACTIVITY_EVENTS_PAGINATED_BY =  getattr(settings, 'ACTIVITY_EVENTS_PAGINATED_BY', 50)
+ACTIVITY_EVENTS_N_FIELDS = getattr(settings, 'ACTIVITY_EVENTS_N_FIELDS', 30)
+ACTIVITY_EVENTS_FOLDER = getattr(settings, 'ACTIVITY_EVENTS_FOLDER', 'activity_events')
+ACTIVITY_EVENTS_CHART_MAX_PAST_DAYS = getattr(settings, 'ACTIVITY_EVENTS_CHART_MAX_PAST_DAYS', 365)
+
+MEDIA_ROOT =  getattr(settings, 'MEDIA_ROOT')
+TIME_ZONE = getattr(settings, 'TIME_ZONE')

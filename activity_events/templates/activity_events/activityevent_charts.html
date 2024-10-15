@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+{% load static %}
+{% load activity_events_filters %}
+
+{% block title %}Activity Events Charts{% endblock %}
+{% block external_script %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+{% endblock %}
+{% block content %}
+<div class = "container">
+<h1>Activity Events Charts</h1>
+<p>Last Successful Data Update: {{ data.last_data_update_time }}</p>
+{% for fieldtype in data.fieldtypes %}
+    {% if fieldtype == 'DateTimeField' %}
+    <h3 class="mt-4">{{ data.displaynames|index:forloop.counter0 }} Chart</h3>
+    <div class="row row-cols-auto">
+        <label class="form-label col" id="{{ data.fields|index:forloop.counter0 }}-levels">
+        Levels
+            <div class="row row-cols-auto">
+                <div class="col">
+                    <label class="form-label" for="{{ data.fields|index:forloop.counter0 }}-time-unit-selector">Time Unit:</label>
+                    <select class="form-select form-select-sm" id="{{ data.fields|index:forloop.counter0 }}-time-unit-selector" name="time-unit">
+                        <option value="day"></option>
+                        <option value="year">Year</option>
+                        <option value="month">Month</option>
+                        <option value="day">Day</option>
+                        <option value="hour">Hour</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label class="form-label" for="{{ data.fields|index:forloop.counter0 }}-legend-selector">Legends:</label>
+                    <select class="form-select form-select-sm" id="{{ data.fields|index:forloop.counter0 }}-legend-selector" name="legend">
+                        <option value=""></option>
+                        {% for displayname in data.displaynames %}
+                            {% if data.fieldtypes|index:forloop.counter0 == 'CharField' %}
+                            <option value="{{ forloop.counter0 }}">{{ displayname }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </label> 
+        <label class="form-label col" id="{{ data.fields|index:forloop.counter0 }}-filter">
+            Date Filter
+            <div class="row row-cols-auto"> 
+                <div class="col">
+                    <label class="form-label" for="{{ data.fields|index:forloop.counter0 }}-start-date-input">Start:</label>
+                    <input class="form-control form-control-sm" type="date" id="{{ data.fields|index:forloop.counter0 }}-start-date-input" name="start-date" min="{{ data.fieldsextra|index:forloop.counter0|index:0 }}" max="{{ data.fieldsextra|index:forloop.counter0|index:1 }}" value="">
+                </div>
+                <div class="col">
+                    <label class="form-label" for="{{ data.fields|index:forloop.counter0 }}-end-date-input">End:</label>
+                    <input class="form-control form-control-sm" type="date" id="{{ data.fields|index:forloop.counter0 }}-end-date-input" name="end-date" min="{{ data.fieldsextra|index:forloop.counter0|index:0 }}" max="{{ data.fieldsextra|index:forloop.counter0|index:1 }}" value="">
+                </div>                
+            </div>
+        </label>
+    </div>        
+    <div class="h-80 w-100">
+        <canvas id="{{ data.fields|index:forloop.counter0 }}-canvas"></canvas>
+    </div>      
+    {% endif %}
+{% endfor %}
+{% if 'CharField' in data.fieldtypes %}
+<h3 class="mt-4">Field Bar Chart</h3>
+<div class="row row-cols-auto">
+    <label class="form-label col" id="charfield-chart-options">
+        Options
+        <div class="row row-cols-auto">
+            <div class="col">
+                <label class="form-label" for="charfield-selector">Field:</label>
+                <select class="form-select form-select-sm" id="charfield-selector" name="field">
+                    <option value="{{ data.fieldtypes|find_first_occurrence:'CharField' }}"></option>
+                    {% for displayname in data.displaynames %}
+                        {% if data.fieldtypes|index:forloop.counter0 == 'CharField' %}
+                        <option value="{{ forloop.counter0 }}">{{ displayname }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col">
+                <label class="form-label" for="sort-direction-selector">Sort direction:</label>
+                <select class="form-select form-select-sm" id="sort-direction-selector" name="sort-direction">
+                    <option value=""></option>
+                    <option value="Ascending">Ascending</option>
+                    <option value="Descending">Descending</option>
+                </select>
+            </div>
+        </div>
+    </label>
+    {% if 'DateTimeField' in data.fieldtypes %}
+    <label class="form-label col" id="first-date-filter">
+        Date Filter
+        <div class="row row-cols-auto">
+            <div class="col">
+                <label class="form-label" for="first-datetime-start-date-input">Start:</label>
+                <input class="form-control form-control-sm" type="date" id="first-datetime-start-date-input" name="start-date" min="{{ data.fieldsextra|get_first_datetime_field_value:data.fieldtypes|index:0 }}" max="{{ data.fieldsextra|get_first_datetime_field_value:data.fieldtypes|index:1 }}" value="">
+            </div>
+            <div class="col">
+                <label class="form-label" for="first-datetime-end-date-input">End:</label>
+                <input class="form-control form-control-sm" type="date" id="first-datetime-end-date-input" name="end-date" min="{{ data.fieldsextra|get_first_datetime_field_value:data.fieldtypes|index:0 }}" max="{{ data.fieldsextra|get_first_datetime_field_value:data.fieldtypes|index:1 }}" value="">
+            </div>
+        </div>
+    </label>   
+    {% endif %}
+    <div class="h-100 w-100">
+        <canvas id="charfield-canvas"></canvas>
+    </div>
+</div>
+{% endif %}
+
+</div>
+{% endblock %}
+{% block script %}
+{{ data|json_script:"chart-data" }}
+<script type="module" src="{% static 'activity_events/chartLogic.js' %}"></script>
+{% endblock %}
